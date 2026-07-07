@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeCortex — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #050810;
+  --surface: #0c1220;
+  --surface2: #111827;
+  --surface3: #1a2235;
+  --border: rgba(99,179,237,0.1);
+  --border2: rgba(99,179,237,0.18);
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --accent3: #34d399;
+  --accent4: #fb923c;
+  --danger: #f87171;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --sidebar-w: 260px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; }
+body { height:100%; font-family:'JetBrains Mono',monospace; background:var(--bg); color:var(--text); display:flex; overflow:hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:var(--sidebar-w); height:100vh; background:var(--surface);
+  border-right:1px solid var(--border); display:flex; flex-direction:column;
+  flex-shrink:0; position:relative; z-index:10;
+}
+.sidebar-brand {
+  padding:24px 20px 20px; display:flex; align-items:center; gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.brand-icon { width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(56,189,248,0.25);flex-shrink:0; }
+.brand-text { font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-0.5px; }
+.brand-text span { color:var(--accent); }
+
+.user-card {
+  margin:16px 12px; padding:12px 14px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:10px; display:flex; align-items:center; gap:10px;
+}
+.user-avatar { width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0; }
+.user-name { font-size:12px;font-weight:600;color:var(--text); }
+.user-plan { font-size:10px;color:var(--accent3);margin-top:1px; }
+.user-badge { margin-left:auto;font-size:9px;background:rgba(56,189,248,0.1);color:var(--accent);padding:2px 7px;border-radius:20px;border:1px solid rgba(56,189,248,0.2); }
+
+.nav-section { padding:12px 12px 4px; font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase; }
+
+.nav-item {
+  display:flex;align-items:center;gap:11px;padding:10px 16px;margin:2px 8px;
+  border-radius:9px;cursor:pointer;transition:all 0.2s;font-size:12px;color:var(--muted);
+  position:relative;text-decoration:none;
+}
+.nav-item:hover { background:rgba(56,189,248,0.06);color:var(--text); }
+.nav-item.active { background:linear-gradient(135deg,rgba(56,189,248,0.12),rgba(129,140,248,0.08));color:var(--accent);border:1px solid rgba(56,189,248,0.15); }
+.nav-item.active .nav-icon { filter:drop-shadow(0 0 6px var(--accent)); }
+.nav-icon { font-size:16px;width:20px;text-align:center;flex-shrink:0; }
+.nav-label { flex:1; }
+.nav-badge { font-size:9px;background:rgba(56,189,248,0.15);color:var(--accent);padding:2px 7px;border-radius:20px;border:1px solid rgba(56,189,248,0.2); }
+.nav-badge.new { background:rgba(52,211,153,0.15);color:var(--accent3);border-color:rgba(52,211,153,0.2); }
+
+.sidebar-footer {
+  margin-top:auto; padding:16px; border-top:1px solid var(--border);
+}
+.logout-btn {
+  display:flex;align-items:center;gap:10px;padding:10px 16px;width:100%;
+  background:transparent;border:1px solid rgba(248,113,113,0.15);border-radius:9px;
+  color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:12px;
+  cursor:pointer;transition:all 0.2s;opacity:0.7;
+}
+.logout-btn:hover { background:rgba(248,113,113,0.08);opacity:1; }
+
+/* ── MAIN CONTENT ── */
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+.topbar {
+  height:64px; background:var(--surface); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 28px; gap:16px; flex-shrink:0;
+}
+.page-title { font-family:'Syne',sans-serif;font-size:18px;font-weight:700;flex:1; }
+.page-title .sub { font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-weight:400; }
+
+.search-bar {
+  display:flex;align-items:center;gap:10px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:9px;padding:8px 14px;
+}
+.search-bar input { background:transparent;border:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;width:160px; }
+.search-bar input::placeholder { color:var(--muted);opacity:0.5; }
+
+.topbar-actions { display:flex;align-items:center;gap:10px; }
+.icon-btn { width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all 0.2s; }
+.icon-btn:hover { border-color:var(--accent);background:rgba(56,189,248,0.08); }
+
+/* Investor type selector */
+.investor-select {
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:7px 12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;
+  outline:none;cursor:pointer;appearance:none;
+}
+
+/* ── PAGES ── */
+.content-area { flex:1;overflow-y:auto;padding:24px 28px; }
+.page-view { display:none; }
+.page-view.active { display:block; }
+
+/* ── ANALYZE PAGE ── */
+.analyze-hero { margin-bottom:28px; }
+.stock-input-row { display:flex;gap:12px;align-items:flex-end; }
+.stock-input-wrap { flex:1;max-width:320px; }
+.stock-input-wrap label { display:block;font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:1px;text-transform:uppercase; }
+.stock-input {
+  width:100%;padding:13px 18px;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:20px;font-weight:700;
+  letter-spacing:2px;outline:none;text-transform:uppercase;transition:all 0.2s;
+}
+.stock-input:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,0.1); }
+.analyze-btn {
+  padding:13px 28px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;
+  font-size:14px;font-weight:700;cursor:pointer;transition:all 0.25s;white-space:nowrap;
+}
+.analyze-btn:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(56,189,248,0.3); }
+.analyze-btn:disabled { opacity:0.5;cursor:not-allowed;transform:none; }
+
+/* Quick tickers */
+.quick-tickers { display:flex;gap:8px;margin-top:14px;flex-wrap:wrap; }
+.ticker-chip {
+  padding:5px 12px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;font-size:11px;cursor:pointer;transition:all 0.2s;color:var(--muted);
+}
+.ticker-chip:hover { border-color:var(--accent);color:var(--accent);background:rgba(56,189,248,0.06); }
+
+/* Stat cards */
+.stat-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px; }
+.stat-card {
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;transition:border-color 0.2s;
+}
+.stat-card:hover { border-color:var(--border2); }
+.stat-label { font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px; }
+.stat-val { font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1; }
+.stat-sub { font-size:11px;color:var(--muted);margin-top:5px; }
+.stat-badge { display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px;margin-top:6px; }
+.badge-up { background:rgba(52,211,153,0.12);color:var(--accent3);border:1px solid rgba(52,211,153,0.2); }
+.badge-down { background:rgba(248,113,113,0.12);color:var(--danger);border:1px solid rgba(248,113,113,0.2); }
+.badge-neutral { background:rgba(251,146,60,0.12);color:var(--accent4);border:1px solid rgba(251,146,60,0.2); }
+
+/* Main grid */
+.main-grid { display:grid;grid-template-columns:1fr 340px;gap:18px;margin-bottom:22px; }
+.card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px; }
+.card-title { font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px; }
+.card-title .dot { width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent); }
+
+/* Chart */
+.chart-wrap { position:relative;height:260px; }
+
+/* Recommendation card */
+.rec-card { text-align:center;padding:28px 20px; }
+.rec-badge {
+  display:inline-block;font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+  padding:16px 40px;border-radius:16px;margin:12px 0 16px;letter-spacing:2px;
+}
+.rec-buy { background:rgba(52,211,153,0.12);color:var(--accent3);border:2px solid rgba(52,211,153,0.3);box-shadow:0 0 30px rgba(52,211,153,0.1); }
+.rec-sell { background:rgba(248,113,113,0.12);color:var(--danger);border:2px solid rgba(248,113,113,0.3);box-shadow:0 0 30px rgba(248,113,113,0.1); }
+.rec-hold { background:rgba(251,146,60,0.12);color:var(--accent4);border:2px solid rgba(251,146,60,0.3);box-shadow:0 0 30px rgba(251,146,60,0.1); }
+.rec-explain { font-size:11px;color:var(--muted);line-height:1.8;margin-top:8px;text-align:left; }
+
+/* EVS meter */
+.evs-card { }
+.evs-meter { margin:12px 0; }
+.evs-track { height:8px;background:var(--surface3);border-radius:4px;overflow:hidden; }
+.evs-fill { height:100%;border-radius:4px;transition:width 1s ease; }
+.evs-labels { display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:5px; }
+.evs-score-big { font-family:'Syne',sans-serif;font-size:40px;font-weight:800;text-align:center;margin:8px 0; }
+
+/* News cards */
+.news-list { display:flex;flex-direction:column;gap:10px; }
+.news-item { padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px; }
+.news-title { font-size:11px;color:var(--text);line-height:1.5; }
+.news-meta { display:flex;gap:8px;margin-top:6px;align-items:center; }
+.news-sent { font-size:10px;padding:1px 8px;border-radius:20px; }
+.sent-pos { background:rgba(52,211,153,0.1);color:var(--accent3); }
+.sent-neg { background:rgba(248,113,113,0.1);color:var(--danger); }
+.sent-neu { background:rgba(100,116,139,0.15);color:var(--muted); }
+
+/* Score bars */
+.score-row { display:flex;align-items:center;gap:12px;margin-bottom:12px; }
+.score-label { font-size:11px;color:var(--muted);width:80px;flex-shrink:0; }
+.score-track { flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden; }
+.score-fill { height:100%;border-radius:3px;transition:width 1s 0.3s ease; }
+.score-val { font-size:11px;width:36px;text-align:right;flex-shrink:0; }
+
+/* Bottom grid */
+.bottom-grid { display:grid;grid-template-columns:1fr 1fr;gap:18px; }
+
+/* ── HISTORY PAGE ── */
+.history-table { width:100%;border-collapse:collapse;font-size:12px; }
+.history-table th { padding:10px 14px;text-align:left;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border); }
+.history-table td { padding:12px 14px;border-bottom:1px solid rgba(99,179,237,0.05);vertical-align:middle; }
+.history-table tr:hover td { background:rgba(56,189,248,0.03); }
+.sym-pill { font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--accent); }
+.rec-pill { padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600; }
+
+/* ── HELP PAGE ── */
+.help-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px; }
+.help-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;transition:all 0.2s; }
+.help-card:hover { border-color:var(--border2);transform:translateY(-2px); }
+.help-icon { font-size:28px;margin-bottom:12px; }
+.help-title { font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:8px; }
+.help-desc { font-size:11px;color:var(--muted);line-height:1.8; }
+
+/* ── PLACEHOLDER ── */
+.placeholder { text-align:center;padding:80px 20px;color:var(--muted); }
+.placeholder-icon { font-size:48px;margin-bottom:16px; }
+.placeholder-title { font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px; }
+.placeholder-sub { font-size:12px;line-height:1.8; }
+
+/* Loading spinner */
+.spinner { display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* Toast */
+.toast { position:fixed;top:20px;right:20px;z-index:999;padding:12px 18px;border-radius:10px;font-size:12px;transform:translateX(120%);transition:transform 0.3s;max-width:300px; }
+.toast.success { background:rgba(52,211,153,0.15);border:1px solid var(--accent3);color:var(--accent3); }
+.toast.error { background:rgba(248,113,113,0.15);border:1px solid var(--danger);color:var(--danger); }
+.toast.show { transform:translateX(0); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--surface3);border-radius:3px; }
+
+/* Toggle switch */
+.toggle-switch { position:relative;display:inline-block;width:42px;height:24px; }
+.toggle-switch input { opacity:0;width:0;height:0; }
+.toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--surface3);border-radius:24px;transition:0.3s;border:1px solid var(--border); }
+.toggle-slider:before { position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+.toggle-switch input:checked + .toggle-slider { background:var(--accent);border-color:var(--accent); }
+.toggle-switch input:checked + .toggle-slider:before { transform:translateX(18px); }
+
+/* Notification panel */
+.notif-panel { position:fixed;top:70px;right:16px;width:320px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;max-height:400px;overflow-y:auto; }
+.notif-panel.open { display:block; }
+.notif-header { padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+.notif-item { padding:12px 16px;border-bottom:1px solid rgba(99,179,237,0.05);font-size:11px;color:var(--text); }
+.notif-item .notif-time { font-size:10px;color:var(--muted);margin-top:3px; }
+.notif-dot { position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--accent3);border-radius:50%;display:none; }
+.icon-btn { position:relative; }
+
+/* Responsive sidebar */
+@media(max-width:900px) {
+  .sidebar { display:none; }
+  .stat-grid { grid-template-columns:repeat(2,1fr); }
+  .main-grid { grid-template-columns:1fr; }
+  .bottom-grid { grid-template-columns:1fr; }
+  .help-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── SIDEBAR ── -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🧠</div>
+    <div class="brand-text">Trade<span>Cortex</span></div>
+  </div>
+
+  <div class="user-card">
+    <div class="user-avatar">👤</div>
+    <div>
+      <div class="user-name" id="sidebarUserName">Trader</div>
+      <div class="user-plan">Pro Account</div>
+    </div>
+    <div class="user-badge">PRO</div>
+  </div>
+
+  <div class="nav-section">MAIN</div>
+  <a class="nav-item active" onclick="showPage('analyze')" href="#">
+    <span class="nav-icon">🔍</span>
+    <span class="nav-label">Analyze Stock</span>
+  </a>
+  <a class="nav-item" onclick="showPage('prediction')" href="#">
+    <span class="nav-icon">📈</span>
+    <span class="nav-label">Price Prediction</span>
+    <span class="nav-badge">ML</span>
+  </a>
+  <a class="nav-item" onclick="showPage('sentiment')" href="#">
+    <span class="nav-icon">💬</span>
+    <span class="nav-label">Sentiment Analysis</span>
+    <span class="nav-badge">NLP</span>
+  </a>
+  <a class="nav-item" onclick="showPage('evs')" href="#">
+    <span class="nav-icon">⚡</span>
+    <span class="nav-label">EVS Score</span>
+    <span class="nav-badge new">USP</span>
+  </a>
+  <a class="nav-item" onclick="showPage('recommendation')" href="#">
+    <span class="nav-icon">🎯</span>
+    <span class="nav-label">Recommendations</span>
+  </a>
+
+  <div class="nav-section">INVESTOR</div>
+  <a class="nav-item" onclick="showPage('portfolio')" href="#">
+    <span class="nav-icon">💼</span>
+    <span class="nav-label">Portfolio Tracker</span>
+  </a>
+  <a class="nav-item" onclick="showPage('volatility')" href="#">
+    <span class="nav-icon">🌊</span>
+    <span class="nav-label">Volatility Monitor</span>
+  </a>
+
+  <div class="nav-section">DATA</div>
+  <a class="nav-item" onclick="showPage('history')" href="#">
+    <span class="nav-icon">🗂️</span>
+    <span class="nav-label">Analysis History</span>
+  </a>
+  <a class="nav-item" onclick="showPage('news')" href="#">
+    <span class="nav-icon">📰</span>
+    <span class="nav-label">News Feed</span>
+  </a>
+
+  <div class="nav-section">ACCOUNT</div>
+  <a class="nav-item" onclick="showPage('settings')" href="#">
+    <span class="nav-icon">⚙️</span>
+    <span class="nav-label">Settings</span>
+  </a>
+  <a class="nav-item" onclick="showPage('help')" href="#">
+    <span class="nav-icon">❓</span>
+    <span class="nav-label">Help & Docs</span>
+  </a>
+
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="handleLogout()">
+      <span>🚪</span> Sign Out
+    </button>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="page-title">
+      <span id="topbarTitle">Analyze Stock</span>
+      <div class="sub" id="topbarSub">Enter a ticker to run full AI analysis</div>
+    </div>
+    <div class="search-bar">
+      <span style="color:var(--muted)">🔎</span>
+      <input type="text" placeholder="Quick search... AAPL" id="quickSearch" onkeydown="if(event.key==='Enter'){document.getElementById('symbolInput').value=this.value.toUpperCase();showPage('analyze');runAnalysis();}">
+    </div>
+    <div class="topbar-actions">
+      <select class="investor-select" id="investorSelect" onchange="updateInvestorType()">
+        <option value="conservative">🛡 Conservative</option>
+        <option value="moderate" selected>⚖ Moderate</option>
+        <option value="aggressive">⚡ Aggressive</option>
+      </select>
+      <div class="icon-btn" title="Notifications" onclick="toggleNotifPanel()" id="notifBtn">🔔<span class="notif-dot" id="notifDot"></span></div>
+      <div class="icon-btn" title="Refresh" onclick="if(currentSymbol)runAnalysis()">🔄</div>
+    </div>
+  </div>
+
+  <!-- Notification panel -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-header">
+      <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">Notifications</span>
+      <button onclick="clearNotifications()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;">Clear all</button>
+    </div>
+    <div id="notifList"><div style="padding:20px;text-align:center;color:var(--muted);font-size:11px;">No notifications yet</div></div>
+  </div>
+
+  <!-- Content -->
+  <div class="content-area">
+
+    <!-- ── ANALYZE PAGE ── -->
+    <div class="page-view active" id="page-analyze">
+      <div class="analyze-hero">
+        <div class="stock-input-row">
+          <div class="stock-input-wrap">
+            <label>Stock Symbol</label>
+            <input type="text" class="stock-input" id="symbolInput" placeholder="AAPL" maxlength="6">
+          </div>
+          <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">
+            ⚡ ANALYZE
+          </button>
+        </div>
+        <div class="quick-tickers">
+          <span style="font-size:10px;color:var(--muted);margin-right:4px;">QUICK:</span>
+          <span class="ticker-chip" onclick="quickAnalyze('AAPL')">AAPL</span>
+          <span class="ticker-chip" onclick="quickAnalyze('TSLA')">TSLA</span>
+          <span class="ticker-chip" onclick="quickAnalyze('GOOGL')">GOOGL</span>
+          <span class="ticker-chip" onclick="quickAnalyze('MSFT')">MSFT</span>
+          <span class="ticker-chip" onclick="quickAnalyze('NVDA')">NVDA</span>
+          <span class="ticker-chip" onclick="quickAnalyze('AMZN')">AMZN</span>
+          <span class="ticker-chip" onclick="quickAnalyze('META')">META</span>
+          <span class="ticker-chip" onclick="quickAnalyze('NFLX')">NFLX</span>
+        </div>
+      </div>
+
+      <!-- Results (hidden until analysis) -->
+      <div id="resultsSection" style="display:none">
+        <!-- Stat Cards -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Current Price</div>
+            <div class="stat-val" id="statPrice">—</div>
+            <div id="statChange" class="stat-badge badge-neutral">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">ML Prediction (5d)</div>
+            <div class="stat-val" id="statPred">—</div>
+            <div class="stat-sub" id="statPredRange">Range: —</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Sentiment</div>
+            <div class="stat-val" id="statSent" style="font-size:18px;">—</div>
+            <div class="stat-sub" id="statSentScore">Score: —</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">EVS Score</div>
+            <div class="stat-val" id="statEVS">—</div>
+            <div class="stat-sub" id="statEVSLevel">Level: —</div>
+          </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+          <div class="card">
+            <div class="card-title"><div class="dot"></div> Price History + ML Prediction</div>
+            <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+          </div>
+          <div class="card rec-card">
+            <div class="card-title" style="justify-content:center"><div class="dot"></div> AI Recommendation</div>
+            <div style="font-size:12px;color:var(--muted)" id="recCompany">—</div>
+            <div class="rec-badge" id="recBadge">—</div>
+            <div class="rec-explain" id="recExplain">—</div>
+
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+              <div class="score-row">
+                <div class="score-label">Model Acc.</div>
+                <div class="score-track"><div class="score-fill" id="scoreAcc" style="background:var(--accent)"></div></div>
+                <div class="score-val" id="scoreAccVal">—</div>
+              </div>
+              <div class="score-row">
+                <div class="score-label">Confidence</div>
+                <div class="score-track"><div class="score-fill" id="scoreConf" style="background:var(--accent2)"></div></div>
+                <div class="score-val" id="scoreConfVal">—</div>
+              </div>
+              <div class="score-row">
+                <div class="score-label">Volatility</div>
+                <div class="score-track"><div class="score-fill" id="scoreVol" style="background:var(--accent4)"></div></div>
+                <div class="score-val" id="scoreVolVal">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Grid -->
+        <div class="bottom-grid">
+          <div class="card">
+            <div class="card-title"><div class="dot" style="background:var(--accent3)"></div> EVS — Emotional Volatility</div>
+            <div class="evs-score-big" id="evsBig">—</div>
+            <div class="evs-meter">
+              <div class="evs-track"><div class="evs-fill" id="evsFill"></div></div>
+              <div class="evs-labels"><span>LOW</span><span>MEDIUM</span><span>HIGH</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.7" id="evsDesc">—</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:4px">PRICE VOL</div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700" id="evsPrice">—</div>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:4px">MISMATCH</div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700" id="evsMismatch">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><div class="dot" style="background:var(--accent2)"></div> Latest News & Sentiment</div>
+            <div class="news-list" id="newsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Placeholder -->
+      <div class="placeholder" id="analyzePlaceholder">
+        <div class="placeholder-icon">🔍</div>
+        <div class="placeholder-title">Enter a stock symbol to begin</div>
+        <div class="placeholder-sub">Type a ticker above or click a quick-access chip<br>to run full AI analysis including ML prediction, EVS score, and recommendation</div>
+      </div>
+    </div>
+
+    <!-- ── PREDICTION PAGE ── -->
+    <div class="page-view" id="page-prediction">
+      <div id="predPlaceholderMsg" class="placeholder">
+        <div class="placeholder-icon">📈</div>
+        <div class="placeholder-title">Price Prediction Engine</div>
+        <div class="placeholder-sub">Run an analysis on the Analyze tab first,<br>then return here to see detailed ML model metrics and the full prediction chart</div>
+      </div>
+      <div id="predDetails" style="display:none">
+        <div class="stat-grid" style="margin-bottom:22px;">
+          <div class="stat-card"><div class="stat-label">Predicted Price</div><div class="stat-val" id="predPrice">—</div></div>
+          <div class="stat-card"><div class="stat-label">R² Score</div><div class="stat-val" id="predR2">—</div></div>
+          <div class="stat-card"><div class="stat-label">Lower Bound</div><div class="stat-val" id="predLow">—</div></div>
+          <div class="stat-card"><div class="stat-label">Upper Bound</div><div class="stat-val" id="predHigh">—</div></div>
+        </div>
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-title"><div class="dot"></div> 5-Day ML Prediction Chart</div>
+          <div class="chart-wrap" style="height:300px;"><canvas id="predChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--accent2)"></div> Model Interpretation</div>
+          <div id="predInterpretation" style="font-size:12px;color:var(--muted);line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SENTIMENT PAGE ── -->
+    <div class="page-view" id="page-sentiment">
+      <div id="sentPlaceholderMsg" class="placeholder">
+        <div class="placeholder-icon">💬</div>
+        <div class="placeholder-title">Sentiment Analysis</div>
+        <div class="placeholder-sub">NLP-powered news sentiment using TextBlob<br>Run an analysis first to see results here</div>
+      </div>
+      <div id="sentDetails" style="display:none">
+        <div class="stat-grid" style="margin-bottom:22px;">
+          <div class="stat-card"><div class="stat-label">Sentiment Label</div><div class="stat-val" id="sentLabelBig" style="font-size:20px;">—</div></div>
+          <div class="stat-card"><div class="stat-label">Compound Score</div><div class="stat-val" id="sentScoreBig">—</div></div>
+          <div class="stat-card"><div class="stat-label">Headlines Analyzed</div><div class="stat-val" id="sentHeadlineCount">—</div></div>
+          <div class="stat-card"><div class="stat-label">Stock</div><div class="stat-val" id="sentSymbolBig" style="font-size:22px;color:var(--accent);">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot"></div> News Headlines & Individual Sentiment</div>
+          <div class="news-list" id="sentNewsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EVS PAGE ── -->
+    <div class="page-view" id="page-evs">
+      <div class="placeholder" id="evsPlaceholder">
+        <div class="placeholder-icon">⚡</div>
+        <div class="placeholder-title">Emotional Volatility Score (EVS)</div>
+        <div class="placeholder-sub">Your unique USP — measures the mismatch between<br>price action and market sentiment<br><br>Run an analysis to see your EVS breakdown</div>
+      </div>
+      <div id="evsDetails" style="display:none;padding:24px 28px;">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--accent3)"></div> Emotional Volatility Score</div>
+          <div class="evs-score-big" id="evsDetailsScore">—</div>
+          <div class="evs-meter">
+            <div class="evs-track"><div class="evs-fill" id="evsDetailsFill"></div></div>
+            <div class="evs-labels"><span>LOW</span><span>MEDIUM</span><span>HIGH</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.7" id="evsDetailsDesc">—</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:4px">PRICE VOLATILITY</div>
+              <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700" id="evsDetailsPrice">—</div>
+            </div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:4px">MISMATCH FACTOR</div>
+              <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700" id="evsDetailsMismatch">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RECOMMENDATION PAGE ── -->
+    <div class="page-view" id="page-recommendation">
+      <div class="placeholder" id="recPlaceholder">
+        <div class="placeholder-icon">🎯</div>
+        <div class="placeholder-title">Smart Recommendations</div>
+        <div class="placeholder-sub">Buy / Hold / Sell signals powered by ML + Sentiment + EVS<br>Choose your investor mode (top-right) and analyze a stock to begin</div>
+      </div>
+      <div id="recDetails" style="display:none;padding:24px 28px;">
+        <div class="card rec-card">
+          <div class="card-title" style="justify-content:center"><div class="dot"></div> AI Recommendation</div>
+          <div style="font-size:12px;color:var(--muted)" id="recDetailsCompany">—</div>
+          <div class="rec-badge" id="recDetailsBadge">—</div>
+          <div class="rec-explain" id="recDetailsExplain">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PORTFOLIO PAGE ── -->
+    <div class="page-view" id="page-portfolio">
+      <div style="display:flex;gap:12px;margin-bottom:20px;align-items:flex-end;">
+        <div style="flex:1;max-width:280px;">
+          <label style="display:block;font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:1px;text-transform:uppercase;">Add to Watchlist</label>
+          <input type="text" id="portfolioInput" style="width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;outline:none;text-transform:uppercase;" placeholder="AAPL" maxlength="6" onkeydown="if(event.key==='Enter')addToPortfolio()">
+        </div>
+        <button onclick="addToPortfolio()" style="padding:11px 24px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">+ ADD STOCK</button>
+        <button onclick="refreshPortfolio()" style="padding:11px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer;">🔄 Refresh</button>
+      </div>
+      <div id="portfolioGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;"></div>
+      <div id="portfolioEmpty" style="display:none;">
+        <div class="placeholder"><div class="placeholder-icon">💼</div><div class="placeholder-title">Your watchlist is empty</div><div class="placeholder-sub">Add stock symbols above to track them here</div></div>
+      </div>
+    </div>
+
+    <!-- ── VOLATILITY PAGE ── -->
+    <div class="page-view" id="page-volatility">
+      <div style="display:flex;gap:12px;margin-bottom:20px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label style="display:block;font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:1px;text-transform:uppercase;">Monitor Ticker</label>
+          <input type="text" id="volInput" style="width:100%;max-width:280px;padding:11px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;outline:none;text-transform:uppercase;" placeholder="AAPL" maxlength="6" onkeydown="if(event.key==='Enter')addVolTicker()">
+        </div>
+        <button onclick="addVolTicker()" style="padding:11px 24px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ MONITOR</button>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot" style="background:var(--accent4)"></div> Volatility Monitor — Multi-Ticker Risk View</div>
+        <div id="volTableWrap">
+          <div class="placeholder" style="padding:40px 20px"><div class="placeholder-icon">🌊</div><div class="placeholder-title">Add tickers above to monitor volatility</div><div class="placeholder-sub">Each ticker will be analyzed for risk level, EVS, and sentiment</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HISTORY PAGE ── -->
+    <div class="page-view" id="page-history">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title"><div class="dot"></div> Recent Analysis Reports</div>
+        <div id="historyContent">
+          <div class="placeholder" style="padding:40px 20px">
+            <div class="placeholder-icon">🗂️</div>
+            <div class="placeholder-title">Loading history...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── NEWS PAGE ── -->
+    <div class="page-view" id="page-news">
+      <div style="display:flex;gap:12px;margin-bottom:20px;align-items:flex-end;">
+        <div style="flex:1;max-width:280px;">
+          <label style="display:block;font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:1px;text-transform:uppercase;">Ticker for News</label>
+          <input type="text" id="newsTickerInput" style="width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;outline:none;text-transform:uppercase;" placeholder="AAPL" maxlength="6" onkeydown="if(event.key==='Enter')loadNewsFeed()">
+        </div>
+        <button onclick="loadNewsFeed()" style="padding:11px 24px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📰 LOAD NEWS</button>
+      </div>
+      <div class="quick-tickers" style="margin-bottom:20px;">
+        <span style="font-size:10px;color:var(--muted);margin-right:4px;">QUICK:</span>
+        <span class="ticker-chip" onclick="loadNewsFor('AAPL')">AAPL</span>
+        <span class="ticker-chip" onclick="loadNewsFor('TSLA')">TSLA</span>
+        <span class="ticker-chip" onclick="loadNewsFor('GOOGL')">GOOGL</span>
+        <span class="ticker-chip" onclick="loadNewsFor('MSFT')">MSFT</span>
+        <span class="ticker-chip" onclick="loadNewsFor('NVDA')">NVDA</span>
+        <span class="ticker-chip" onclick="loadNewsFor('META')">META</span>
+      </div>
+      <div id="newsFeedContent">
+        <div class="placeholder"><div class="placeholder-icon">📰</div><div class="placeholder-title">Select a ticker to load news</div><div class="placeholder-sub">News headlines are fetched with NLP sentiment scoring</div></div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS PAGE ── -->
+    <div class="page-view" id="page-settings">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:800px;">
+        <div class="card">
+          <div class="card-title"><div class="dot"></div> Account Settings</div>
+          <div style="display:flex;flex-direction:column;gap:18px;margin-top:8px">
+            <div>
+              <label style="display:block;font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:1px;text-transform:uppercase;">Display Name</label>
+              <input id="settingsName" style="width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;" placeholder="Your name">
+            </div>
+            <div>
+              <label style="display:block;font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:1px;text-transform:uppercase;">Default Investor Mode</label>
+              <select id="settingsInvestor" style="width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;appearance:none;">
+                <option value="conservative">🛡️ Conservative — prioritizes capital safety</option>
+                <option value="moderate" selected>⚖️ Moderate — balances risk and reward</option>
+                <option value="aggressive">⚡ Aggressive — accepts higher risk</option>
+              </select>
+            </div>
+            <button onclick="saveSettings()" style="padding:12px 24px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;align-self:flex-start;">💾 Save Settings</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--accent2)"></div> Preferences</div>
+          <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;">
+              <div>
+                <div style="font-size:12px;color:var(--text);margin-bottom:2px;">🔔 Analysis Notifications</div>
+                <div style="font-size:10px;color:var(--muted);">Show toast when analysis completes</div>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" id="notifToggle" checked onchange="saveSettings()"><span class="toggle-slider"></span></label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;">
+              <div>
+                <div style="font-size:12px;color:var(--text);margin-bottom:2px;">📊 Auto-load Prediction Chart</div>
+                <div style="font-size:10px;color:var(--muted);">Render prediction chart after each analysis</div>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" id="autoChartToggle" checked onchange="saveSettings()"><span class="toggle-slider"></span></label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;">
+              <div>
+                <div style="font-size:12px;color:var(--text);margin-bottom:2px;">🌊 Volatility Watchlist Auto-refresh</div>
+                <div style="font-size:10px;color:var(--muted);">Auto-refresh vol monitor on page open</div>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" id="volAutoToggle" onchange="saveSettings()"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-title"><div class="dot" style="background:var(--danger)"></div> Danger Zone</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+            <button onclick="clearPortfolio()" style="padding:10px 20px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:9px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;">🗑️ Clear Watchlist</button>
+            <button onclick="clearNotifications()" style="padding:10px 20px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:9px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;">🔔 Clear Notifications</button>
+            <button onclick="if(confirm('Clear all local settings?')){localStorage.clear();showToast('Settings cleared — reload page','success');}" style="padding:10px 20px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:9px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;">⚠️ Reset All Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HELP PAGE ── -->
+    <div class="page-view" id="page-help">
+      <div class="help-grid">
+        <div class="help-card">
+          <div class="help-icon">📈</div>
+          <div class="help-title">ML Price Prediction</div>
+          <div class="help-desc">Linear Regression trained on 3 months of historical data. Predicts the closing price 5 trading days ahead. Model accuracy shown as R² score × 100.</div>
+        </div>
+        <div class="help-card">
+          <div class="help-icon">⚡</div>
+          <div class="help-title">EVS — Emotional Volatility Score</div>
+          <div class="help-desc">Our USP. Combines price volatility with sentiment-price mismatch. High EVS = price and news sentiment disagree. Use caution when EVS > 66.</div>
+        </div>
+        <div class="help-card">
+          <div class="help-icon">💬</div>
+          <div class="help-title">Sentiment Analysis</div>
+          <div class="help-desc">Uses TextBlob NLP to score news headlines -1.0 (negative) to +1.0 (positive). Scores above 0.1 = Positive, below -0.1 = Negative.</div>
+        </div>
+        <div class="help-card">
+          <div class="help-icon">🎯</div>
+          <div class="help-title">Recommendation Engine</div>
+          <div class="help-desc">Combines ML trend, sentiment, and EVS risk using a weighted score system. Thresholds adjust based on your investor mode (Conservative/Moderate/Aggressive).</div>
+        </div>
+        <div class="help-card">
+          <div class="help-icon">🛡️</div>
+          <div class="help-title">Investor Modes</div>
+          <div class="help-desc">Conservative requires score ≥ 4 to Buy. Moderate requires ≥ 3. Aggressive only needs ≥ 1. Set your mode in the top-right dropdown.</div>
+        </div>
+        <div class="help-card">
+          <div class="help-icon">🗂️</div>
+          <div class="help-title">Analysis History</div>
+          <div class="help-desc">Every analysis is saved to MySQL. View your last 20 reports in the History tab, including sentiment, EVS, and recommendation for each ticker.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="dot"></div> API Reference</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:12px">
+          <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace">
+            <span style="color:var(--accent3)">GET</span> /api/analyze?symbol=<span style="color:var(--accent)">AAPL</span>&investor_type=<span style="color:var(--accent2)">moderate</span>
+          </div>
+          <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace">
+            <span style="color:var(--accent3)">GET</span> /api/history — <span style="color:var(--muted)">Returns last 20 saved reports</span>
+          </div>
+          <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace">
+            <span style="color:var(--accent3)">GET</span> /api/auth/me — <span style="color:var(--muted)">Current user session</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content-area -->
+</div><!-- /main -->
+
+<script>
+let chartInstance = null;
+let predChartInstance = null;
+let currentSymbol = '';
+let lastData = null;
+let portfolioWatchlist = JSON.parse(localStorage.getItem('tc_portfolio') || '[]');
+let volWatchlist = JSON.parse(localStorage.getItem('tc_vol_watchlist') || '[]');
+let notifications = JSON.parse(localStorage.getItem('tc_notifications') || '[]');
+
+const pageLabels = {
+  analyze: ['Analyze Stock', 'Enter a ticker to run full AI analysis'],
+  prediction: ['Price Prediction', 'ML-powered 5-day price forecast'],
+  sentiment: ['Sentiment Analysis', 'NLP analysis on news headlines'],
+  evs: ['EVS Score', 'Emotional Volatility Score — your USP'],
+  recommendation: ['Recommendations', 'AI Buy / Hold / Sell signals'],
+  portfolio: ['Portfolio Tracker', 'Track your watchlist over time'],
+  volatility: ['Volatility Monitor', 'Real-time risk monitoring'],
+  history: ['Analysis History', 'Past reports stored in MySQL'],
+  news: ['News Feed', 'Latest stock news from yfinance'],
+  settings: ['Settings', 'Configure your account preferences'],
+  help: ['Help & Docs', 'Feature guide and API reference'],
+};
+
+function showPage(id) {
+  try {
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => { if(n.getAttribute('onclick')?.includes(`'${id}'`)) n.classList.add('active'); });
+    const labels = pageLabels[id] || [id, ''];
+    document.getElementById('topbarTitle').textContent = labels[0];
+    document.getElementById('topbarSub').textContent = labels[1];
+    if (id === 'history') loadHistory();
+    if (id === 'portfolio') renderPortfolio();
+    if (id === 'volatility') renderVolMonitor();
+    if (id === 'news' && currentSymbol) { document.getElementById('newsTickerInput').value = currentSymbol; }
+    // close notif panel on page change
+    document.getElementById('notifPanel').classList.remove('open');
+  } catch (err) {
+    console.error('Error switching page:', err);
+  }
+}
+
+function showToast(msg, type='success') {
+  const pref = localStorage.getItem('tc_notif');
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+window.quickAnalyze = function(sym) {
+  document.getElementById('symbolInput').value = sym;
+  showPage('analyze');
+  runAnalysis();
+}
+
+function updateInvestorType() {
+  if (currentSymbol) runAnalysis();
+}
+
+// ── NOTIFICATION SYSTEM ──
+function addNotification(msg, type='info') {
+  const notif = { msg, type, time: new Date().toLocaleTimeString() };
+  notifications.unshift(notif);
+  if (notifications.length > 20) notifications.pop();
+  localStorage.setItem('tc_notifications', JSON.stringify(notifications));
+  renderNotifications();
+  document.getElementById('notifDot').style.display = 'block';
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifList');
+  if (!notifications.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:11px;">No notifications yet</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(n => {
+    const icon = n.type === 'success' ? '✅' : n.type === 'error' ? '❌' : '📊';
+    return `<div class="notif-item">${icon} ${n.msg}<div class="notif-time">${n.time}</div></div>`;
+  }).join('');
+}
+
+function clearNotifications() {
+  notifications = [];
+  localStorage.setItem('tc_notifications', '[]');
+  renderNotifications();
+  document.getElementById('notifDot').style.display = 'none';
+  showToast('Notifications cleared', 'success');
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    document.getElementById('notifDot').style.display = 'none';
+    renderNotifications();
+  }
+}
+document.addEventListener('click', e => {
+  const panel = document.getElementById('notifPanel');
+  const btn = document.getElementById('notifBtn');
+  if (!panel.contains(e.target) && !btn.contains(e.target)) panel.classList.remove('open');
+});
+
+// ── ANALYSIS ──
+async function runAnalysis() {
+  const symbol = document.getElementById('symbolInput').value.trim().toUpperCase();
+  if (!symbol) { showToast('Enter a stock symbol', 'error'); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> ANALYZING...';
+  document.getElementById('analyzePlaceholder').style.display = 'none';
+  document.getElementById('resultsSection').style.display = 'none';
+
+  const investorType = document.getElementById('investorSelect').value;
+
+  try {
+    const res = await fetch(`/api/analyze?symbol=${symbol}&investor_type=${investorType}`);
+    if (res.redirected || res.url.includes('/login')) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Analysis failed');
+    currentSymbol = symbol;
+    lastData = data;
+    renderResults(data);
+    addNotification(`${symbol} analyzed — ${data.recommendation} (EVS: ${data.evs.evs_score})`, 'success');
+    showToast(`${symbol} analysis complete`, 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+    addNotification(`Analysis failed: ${err.message}`, 'error');
+    document.getElementById('analyzePlaceholder').style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ ANALYZE';
+  }
+}
+
+function renderResults(d) {
+  document.getElementById('resultsSection').style.display = 'block';
+
+  // Stat cards
+  document.getElementById('statPrice').textContent = '$' + d.price.current;
+  const chg = d.price.change_pct;
+  const chgEl = document.getElementById('statChange');
+  chgEl.textContent = (chg >= 0 ? '▲ +' : '▼ ') + chg + '% (5d)';
+  chgEl.className = 'stat-badge ' + (chg >= 0 ? 'badge-up' : 'badge-down');
+
+  document.getElementById('statPred').textContent = '$' + d.ml_prediction.predicted_price;
+  document.getElementById('statPredRange').textContent = `Range: $${d.ml_prediction.lower_bound} – $${d.ml_prediction.upper_bound}`;
+
+  const sentColors = { Positive:'var(--accent3)', Negative:'var(--danger)', Neutral:'var(--accent4)' };
+  document.getElementById('statSent').textContent = d.sentiment.label;
+  document.getElementById('statSent').style.color = sentColors[d.sentiment.label] || 'inherit';
+  document.getElementById('statSentScore').textContent = 'Score: ' + d.sentiment.score;
+
+  document.getElementById('statEVS').textContent = d.evs.evs_score;
+  document.getElementById('statEVSLevel').textContent = 'Level: ' + d.evs.evs_level;
+
+  renderChart(d.chart_data, d.price.current, d.ml_prediction.predicted_price);
+
+  // Recommendation
+  const recBadge = document.getElementById('recBadge');
+  recBadge.textContent = d.recommendation;
+  recBadge.className = 'rec-badge rec-' + d.recommendation.toLowerCase();
+  document.getElementById('recCompany').textContent = (d.stock_info?.name || d.symbol) + ' · ' + d.investor_type + ' mode';
+  document.getElementById('recExplain').textContent = d.explanation;
+
+  const acc = d.ml_prediction.model_accuracy;
+  const conf = d.volatility.confidence;
+  const vol = Math.round(d.volatility.score * 100);
+  document.getElementById('scoreAcc').style.width = acc + '%';
+  document.getElementById('scoreAccVal').textContent = acc + '%';
+  document.getElementById('scoreConf').style.width = conf + '%';
+  document.getElementById('scoreConfVal').textContent = conf + '%';
+  document.getElementById('scoreVol').style.width = vol + '%';
+  document.getElementById('scoreVolVal').textContent = vol + '%';
+
+  // EVS
+  const evsScore = d.evs.evs_score;
+  const evsColor = evsScore < 33 ? 'var(--accent3)' : evsScore < 66 ? 'var(--accent4)' : 'var(--danger)';
+  document.getElementById('evsBig').textContent = evsScore;
+  document.getElementById('evsBig').style.color = evsColor;
+  document.getElementById('evsFill').style.width = evsScore + '%';
+  document.getElementById('evsFill').style.background = evsColor;
+  document.getElementById('evsDesc').textContent = d.evs.evs_description;
+  document.getElementById('evsPrice').textContent = d.evs.price_volatility;
+  document.getElementById('evsMismatch').textContent = d.evs.mismatch_factor;
+
+  // News
+  renderNews(d.sentiment.news, d.sentiment.label);
+
+  // ── Update prediction page ──
+  document.getElementById('predPlaceholderMsg').style.display = 'none';
+  document.getElementById('predDetails').style.display = 'block';
+  document.getElementById('predPrice').textContent = '$' + d.ml_prediction.predicted_price;
+  document.getElementById('predR2').textContent = d.ml_prediction.r2_score;
+  document.getElementById('predLow').textContent = '$' + d.ml_prediction.lower_bound;
+  document.getElementById('predHigh').textContent = '$' + d.ml_prediction.upper_bound;
+  renderPredChart(d.chart_data);
+  const trend = d.ml_prediction.trend;
+  const current = d.price.current;
+  const predicted = d.ml_prediction.predicted_price;
+  const delta = (predicted - current).toFixed(2);
+  const pct = (((predicted - current) / current) * 100).toFixed(2);
+  document.getElementById('predInterpretation').innerHTML = `
+    <strong style="color:var(--text)">Symbol:</strong> ${d.symbol} &nbsp;|&nbsp;
+    <strong style="color:var(--text)">Model:</strong> Linear Regression &nbsp;|&nbsp;
+    <strong style="color:var(--text)">Horizon:</strong> 5 trading days<br><br>
+    Current price of <strong style="color:var(--accent)">$${current}</strong> is predicted to move to
+    <strong style="color:${trend === 'UP' ? 'var(--accent3)' : 'var(--danger)'}">$${predicted}</strong>
+    — a change of <strong>${delta >= 0 ? '+' : ''}${delta} (${pct >= 0 ? '+' : ''}${pct}%)</strong>.<br><br>
+    R² score of <strong>${d.ml_prediction.r2_score}</strong> indicates model fit quality (1.0 = perfect).
+    Confidence band: <strong>$${d.ml_prediction.lower_bound}</strong> – <strong>$${d.ml_prediction.upper_bound}</strong>.
+  `;
+
+  // ── Update sentiment page ──
+  document.getElementById('sentPlaceholderMsg').style.display = 'none';
+  document.getElementById('sentDetails').style.display = 'block';
+  document.getElementById('sentLabelBig').textContent = d.sentiment.label;
+  document.getElementById('sentLabelBig').style.color = sentColors[d.sentiment.label] || 'inherit';
+  document.getElementById('sentScoreBig').textContent = d.sentiment.score;
+  document.getElementById('sentHeadlineCount').textContent = d.sentiment.news.length;
+  document.getElementById('sentSymbolBig').textContent = d.symbol;
+  renderSentimentNews(d.sentiment.news, d.sentiment.label);
+
+  // ── Update EVS page ──
+  const evs2 = d.evs.evs_score;
+  const evsColor2 = evs2 < 33 ? 'var(--accent3)' : evs2 < 66 ? 'var(--accent4)' : 'var(--danger)';
+  document.getElementById('evsDetails').style.display = 'block';
+  document.getElementById('evsPlaceholder').style.display = 'none';
+  document.getElementById('evsDetailsScore').textContent = evs2;
+  document.getElementById('evsDetailsScore').style.color = evsColor2;
+  document.getElementById('evsDetailsFill').style.width = evs2 + '%';
+  document.getElementById('evsDetailsFill').style.background = evsColor2;
+  document.getElementById('evsDetailsDesc').textContent = d.evs.evs_description;
+  document.getElementById('evsDetailsPrice').textContent = d.evs.price_volatility;
+  document.getElementById('evsDetailsMismatch').textContent = d.evs.mismatch_factor;
+
+  // ── Update recommendation page ──
+  document.getElementById('recDetails').style.display = 'block';
+  document.getElementById('recPlaceholder').style.display = 'none';
+  const recBadgeDetail = document.getElementById('recDetailsBadge');
+  recBadgeDetail.textContent = d.recommendation;
+  recBadgeDetail.className = 'rec-badge rec-' + d.recommendation.toLowerCase();
+  document.getElementById('recDetailsCompany').textContent = (d.stock_info?.name || d.symbol) + ' · ' + d.investor_type + ' mode';
+  document.getElementById('recDetailsExplain').textContent = d.explanation;
+}
+
+function renderChart(chartData, current, predicted) {
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  const predLen = chartData.prediction_dates.length;
+  const histLen = chartData.prices.length;
+  const padCount = Math.max(0, predLen - histLen);
+
+  chartInstance = new Chart(ctx, {
+    type:'line',
+    data: {
+      labels: chartData.prediction_dates,
+      datasets: [
+        {
+          label:'Historical Price',
+          data: [...chartData.prices, ...Array(padCount).fill(null)],
+          borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,0.08)',
+          borderWidth:2, pointRadius:5, fill:true, tension:0.3,
+        },
+        {
+          label:'ML Prediction',
+          data: Array(Math.max(0, histLen - predLen)).fill(null).concat(chartData.prediction_prices),
+          borderColor:'#818cf8', backgroundColor:'rgba(129,140,248,0.05)',
+          borderWidth:2, borderDash:[6,3], pointRadius:5, fill:false, tension:0.3,
+        }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#64748b', font:{ family:'JetBrains Mono', size:11 } } } },
+      scales:{
+        x:{ ticks:{ color:'#374151', font:{size:10}, maxTicksLimit:8 }, grid:{ color:'rgba(99,179,237,0.05)' } },
+        y:{ ticks:{ color:'#374151', font:{size:10}, callback: v=>'$'+v }, grid:{ color:'rgba(99,179,237,0.05)' } }
+      }
+    }
+  });
+}
+
+function renderPredChart(chartData) {
+  if (predChartInstance) { predChartInstance.destroy(); predChartInstance = null; }
+  const canvas = document.getElementById('predChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const predLen = chartData.prediction_dates.length;
+  const histLen = chartData.prices.length;
+  const padCount = Math.max(0, predLen - histLen);
+
+  predChartInstance = new Chart(ctx, {
+    type:'line',
+    data: {
+      labels: chartData.prediction_dates,
+      datasets: [
+        {
+          label:'Historical Price',
+          data: [...chartData.prices, ...Array(padCount).fill(null)],
+          borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,0.08)',
+          borderWidth:2, pointRadius:5, fill:true, tension:0.3,
+        },
+        {
+          label:'ML Prediction',
+          data: Array(Math.max(0, histLen - predLen)).fill(null).concat(chartData.prediction_prices),
+          borderColor:'#34d399', backgroundColor:'rgba(52,211,153,0.08)',
+          borderWidth:2, borderDash:[5,4], pointRadius:5, pointBackgroundColor:'#34d399', fill:true, tension:0.3,
+        }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#94a3b8', font:{ family:'JetBrains Mono', size:11 } } } },
+      scales:{
+        x:{ ticks:{ color:'#374151', font:{size:10}, maxTicksLimit:10 }, grid:{ color:'rgba(99,179,237,0.05)' } },
+        y:{ ticks:{ color:'#374151', font:{size:10}, callback: v=>'$'+v }, grid:{ color:'rgba(99,179,237,0.05)' } }
+      }
+    }
+  });
+}
+
+function renderNews(news, sentLabel) {
+  const container = document.getElementById('newsList');
+  container.innerHTML = news.map(headline => {
+    const cls = sentLabel === 'Positive' ? 'sent-pos' : sentLabel === 'Negative' ? 'sent-neg' : 'sent-neu';
+    return `<div class="news-item">
+      <div class="news-title">${headline}</div>
+      <div class="news-meta"><span class="news-sent ${cls}">${sentLabel}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderSentimentNews(news, sentLabel) {
+  const container = document.getElementById('sentNewsList');
+  container.innerHTML = news.map(h => {
+    const cls = sentLabel === 'Positive' ? 'sent-pos' : sentLabel === 'Negative' ? 'sent-neg' : 'sent-neu';
+    return `<div class="news-item"><div class="news-title">${h}</div><div class="news-meta"><span class="news-sent ${cls}">${sentLabel}</span></div></div>`;
+  }).join('');
+}
+
+// ── PORTFOLIO ──
+function addToPortfolio() {
+  const sym = document.getElementById('portfolioInput').value.trim().toUpperCase();
+  if (!sym) return;
+  if (portfolioWatchlist.includes(sym)) { showToast(`${sym} already in watchlist`, 'error'); return; }
+  portfolioWatchlist.push(sym);
+  localStorage.setItem('tc_portfolio', JSON.stringify(portfolioWatchlist));
+  document.getElementById('portfolioInput').value = '';
+  renderPortfolio();
+  addNotification(`${sym} added to watchlist`, 'info');
+  showToast(`${sym} added to watchlist`, 'success');
+}
+
+function removeFromPortfolio(sym) {
+  portfolioWatchlist = portfolioWatchlist.filter(s => s !== sym);
+  localStorage.setItem('tc_portfolio', JSON.stringify(portfolioWatchlist));
+  renderPortfolio();
+  showToast(`${sym} removed`, 'success');
+}
+
+function clearPortfolio() {
+  if (!confirm('Clear entire watchlist?')) return;
+  portfolioWatchlist = [];
+  localStorage.setItem('tc_portfolio', '[]');
+  renderPortfolio();
+  showToast('Watchlist cleared', 'success');
+}
+
+async function renderPortfolio() {
+  const grid = document.getElementById('portfolioGrid');
+  const empty = document.getElementById('portfolioEmpty');
+  if (!portfolioWatchlist.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = portfolioWatchlist.map(sym => `
+    <div class="card" id="port-${sym}" style="position:relative;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent)">${sym}</span>
+        <button onclick="removeFromPortfolio('${sym}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;" title="Remove">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);">Loading...</div>
+      <button onclick="quickAnalyze('${sym}')" style="margin-top:12px;width:100%;padding:8px;background:rgba(56,189,248,0.08);border:1px solid var(--border);border-radius:7px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;">⚡ Analyze</button>
+    </div>
+  `).join('');
+  // fetch data for each
+  for (const sym of portfolioWatchlist) {
+    try {
+      const res = await fetch(`/api/analyze?symbol=${sym}&investor_type=moderate`);
+      const data = await res.json();
+      const card = document.getElementById(`port-${sym}`);
+      if (!card) continue;
+      if (data.success) {
+        const chg = data.price.change_pct;
+        const color = chg >= 0 ? 'var(--accent3)' : 'var(--danger)';
+        const recCls = data.recommendation === 'Buy' ? 'badge-up' : data.recommendation === 'Sell' ? 'badge-down' : 'badge-neutral';
+        card.querySelector('div + div').innerHTML = `
+          <div style="font-size:22px;font-family:'Syne',sans-serif;font-weight:800;margin-bottom:6px;">$${data.price.current}</div>
+          <div style="color:${color};font-size:11px;margin-bottom:8px;">${chg >= 0 ? '▲ +' : '▼ '}${chg}% (5d)</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="stat-badge ${recCls}" style="font-size:10px;">${data.recommendation}</span>
+            <span style="font-size:10px;color:var(--muted);">EVS: ${data.evs.evs_score}</span>
+          </div>`;
+      }
+    } catch {}
+  }
+}
+
+function refreshPortfolio() { renderPortfolio(); showToast('Watchlist refreshing...', 'success'); }
+
+// ── VOLATILITY MONITOR ──
+function addVolTicker() {
+  const sym = document.getElementById('volInput').value.trim().toUpperCase();
+  if (!sym) return;
+  if (volWatchlist.includes(sym)) { showToast(`${sym} already monitored`, 'error'); return; }
+  volWatchlist.push(sym);
+  localStorage.setItem('tc_vol_watchlist', JSON.stringify(volWatchlist));
+  document.getElementById('volInput').value = '';
+  renderVolMonitor();
+  showToast(`${sym} added to monitor`, 'success');
+}
+
+async function renderVolMonitor() {
+  const wrap = document.getElementById('volTableWrap');
+  if (!volWatchlist.length) {
+    wrap.innerHTML = '<div class="placeholder" style="padding:40px 20px"><div class="placeholder-icon">🌊</div><div class="placeholder-title">Add tickers above to monitor volatility</div></div>';
+    return;
+  }
+  wrap.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:12px;"><span class="spinner"></span> Fetching volatility data...</div>';
+  const rows = [];
+  for (const sym of volWatchlist) {
+    try {
+      const res = await fetch(`/api/analyze?symbol=${sym}&investor_type=moderate`);
+      const data = await res.json();
+      if (data.success) {
+        const riskColor = data.volatility.risk === 'Low' ? 'var(--accent3)' : data.volatility.risk === 'Medium' ? 'var(--accent4)' : 'var(--danger)';
+        const evsColor = data.evs.evs_score < 33 ? 'var(--accent3)' : data.evs.evs_score < 66 ? 'var(--accent4)' : 'var(--danger)';
+        const chg = data.price.change_pct;
+        rows.push(`<tr>
+          <td><span class="sym-pill">${sym}</span></td>
+          <td style="font-family:'Syne',sans-serif;font-weight:700;">$${data.price.current}</td>
+          <td style="color:${chg>=0?'var(--accent3)':'var(--danger)'}">${chg>=0?'▲ +':'▼ '}${chg}%</td>
+          <td><span style="color:${riskColor};font-weight:600;">${data.volatility.risk}</span></td>
+          <td><span style="color:${evsColor};font-weight:700;">${data.evs.evs_score}</span></td>
+          <td><span class="news-sent ${data.sentiment.label==='Positive'?'sent-pos':data.sentiment.label==='Negative'?'sent-neg':'sent-neu'}">${data.sentiment.label}</span></td>
+          <td style="color:var(--muted);font-size:11px;">${data.volatility.confidence}%</td>
+          <td>
+            <button onclick="volWatchlist=volWatchlist.filter(s=>s!=='${sym}');localStorage.setItem('tc_vol_watchlist',JSON.stringify(volWatchlist));renderVolMonitor();" style="background:none;border:none;color:var(--muted);cursor:pointer;">✕</button>
+            <button onclick="quickAnalyze('${sym}')" style="background:rgba(56,189,248,0.08);border:1px solid var(--border);border-radius:5px;color:var(--accent);padding:3px 8px;cursor:pointer;font-size:10px;margin-left:4px;">⚡</button>
+          </td>
+        </tr>`);
+      }
+    } catch {}
+  }
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="placeholder" style="padding:40px 20px"><div class="placeholder-icon">⚠️</div><div class="placeholder-title">Could not fetch data</div></div>';
+    return;
+  }
+  wrap.innerHTML = `<div style="overflow-x:auto"><table class="history-table">
+    <thead><tr>
+      <th>Symbol</th><th>Price</th><th>5d Change</th><th>Risk</th><th>EVS</th><th>Sentiment</th><th>Confidence</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${rows.join('')}</tbody>
+  </table></div>`;
+}
+
+// ── NEWS FEED ──
+function loadNewsFor(sym) {
+  document.getElementById('newsTickerInput').value = sym;
+  loadNewsFeed();
+}
+
+async function loadNewsFeed() {
+  const sym = document.getElementById('newsTickerInput').value.trim().toUpperCase();
+  if (!sym) { showToast('Enter a ticker', 'error'); return; }
+  const content = document.getElementById('newsFeedContent');
+  content.innerHTML = '<div style="padding:24px;color:var(--muted);font-size:12px;"><span class="spinner"></span> Loading news...</div>';
+  try {
+    const res = await fetch(`/api/analyze?symbol=${sym}&investor_type=moderate`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    const sentLabel = data.sentiment.label;
+    const sentScore = data.sentiment.score;
+    const sentCls = sentLabel === 'Positive' ? 'sent-pos' : sentLabel === 'Negative' ? 'sent-neg' : 'sent-neu';
+    const sentColor = sentLabel === 'Positive' ? 'var(--accent3)' : sentLabel === 'Negative' ? 'var(--danger)' : 'var(--accent4)';
+    content.innerHTML = `
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+        <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)">${sym}</span>
+        <span class="news-sent ${sentCls}" style="font-size:12px;padding:4px 12px;">${sentLabel}</span>
+        <span style="font-size:11px;color:var(--muted);">Score: ${sentScore}</span>
+        <span style="font-size:11px;color:var(--muted);">Price: $${data.price.current}</span>
+      </div>
+      <div class="news-list">${data.sentiment.news.map(h =>
+        `<div class="news-item">
+          <div class="news-title">${h}</div>
+          <div class="news-meta"><span class="news-sent ${sentCls}">${sentLabel}</span><span style="font-size:10px;color:var(--muted);margin-left:8px;">via yfinance</span></div>
+        </div>`
+      ).join('')}</div>`;
+  } catch (err) {
+    content.innerHTML = `<div class="placeholder"><div class="placeholder-icon">⚠️</div><div class="placeholder-title">Could not load news</div><div class="placeholder-sub">${err.message}</div></div>`;
+  }
+}
+
+// ── HISTORY ──
+async function loadHistory() {
+  document.getElementById('historyContent').innerHTML = '<div class="placeholder" style="padding:40px 20px"><div class="placeholder-icon">⏳</div><div class="placeholder-title">Loading...</div></div>';
+  try {
+    const res = await fetch('/api/history');
+    const data = await res.json();
+    if (!data.success || !data.reports.length) {
+      document.getElementById('historyContent').innerHTML = '<div class="placeholder" style="padding:40px 20px"><div class="placeholder-icon">📭</div><div class="placeholder-title">No reports yet</div><div class="placeholder-sub">Analyze some stocks to build your history</div></div>';
+      return;
+    }
+    const rows = data.reports.map(r => {
+      const recCls = r.recommendation === 'Buy' ? 'badge-up' : r.recommendation === 'Sell' ? 'badge-down' : 'badge-neutral';
+      const sentCls = r.sentiment_label === 'Positive' ? 'sent-pos' : r.sentiment_label === 'Negative' ? 'sent-neg' : 'sent-neu';
+      return `<tr>
+        <td><span class="sym-pill" style="cursor:pointer;" onclick="quickAnalyze('${r.symbol}')">${r.symbol}</span></td>
+        <td>$${r.price}</td>
+        <td><span class="news-sent ${sentCls}">${r.sentiment_label}</span></td>
+        <td>${r.evs_score} <span style="font-size:10px;color:var(--muted)">(${r.evs_level})</span></td>
+        <td><span class="rec-pill stat-badge ${recCls}">${r.recommendation}</span></td>
+        <td style="color:var(--muted);font-size:11px">${r.investor_type}</td>
+        <td style="color:var(--muted);font-size:11px">${r.created_at?.split('T')[0] || r.created_at?.split(' ')[0] || '—'}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('historyContent').innerHTML = `
+      <div style="overflow-x:auto">
+        <table class="history-table">
+          <thead><tr>
+            <th>Symbol</th><th>Price</th><th>Sentiment</th><th>EVS</th><th>Recommendation</th><th>Investor Mode</th><th>Date</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch {
+    document.getElementById('historyContent').innerHTML = '<div class="placeholder" style="padding:40px 20px"><div class="placeholder-icon">⚠️</div><div class="placeholder-title">Could not load history</div><div class="placeholder-sub">Check your database connection</div></div>';
+  }
+}
+
+// ── SETTINGS ──
+function saveSettings() {
+  const name = document.getElementById('settingsName').value.trim();
+  const investor = document.getElementById('settingsInvestor').value;
+  const notif = document.getElementById('notifToggle').checked;
+  const autoChart = document.getElementById('autoChartToggle').checked;
+  const volAuto = document.getElementById('volAutoToggle').checked;
+  if (name) {
+    document.getElementById('sidebarUserName').textContent = name;
+    localStorage.setItem('tc_name', name);
+  }
+  document.getElementById('investorSelect').value = investor;
+  localStorage.setItem('tc_investor', investor);
+  localStorage.setItem('tc_notif', notif ? '1' : '0');
+  localStorage.setItem('tc_autochart', autoChart ? '1' : '0');
+  localStorage.setItem('tc_volauto', volAuto ? '1' : '0');
+  showToast('Settings saved', 'success');
+}
+
+async function handleLogout() {
+  try { await fetch('/api/auth/logout', { method:'POST' }); } catch {}
+  window.location.href = '/login';
+}
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') runAnalysis();
+  if (e.key === 'Escape') document.getElementById('symbolInput').blur();
+});
+
+// Restore settings
+const savedName = localStorage.getItem('tc_name');
+const savedInvestor = localStorage.getItem('tc_investor');
+if (savedName) document.getElementById('sidebarUserName').textContent = savedName;
+if (savedInvestor) document.getElementById('investorSelect').value = savedInvestor;
+
+// Restore settings toggles
+window.addEventListener('DOMContentLoaded', () => {
+  const notif = localStorage.getItem('tc_notif');
+  const autoChart = localStorage.getItem('tc_autochart');
+  const volAuto = localStorage.getItem('tc_volauto');
+  if (notif !== null) document.getElementById('notifToggle').checked = notif === '1';
+  if (autoChart !== null) document.getElementById('autoChartToggle').checked = autoChart === '1';
+  if (volAuto !== null) document.getElementById('volAutoToggle').checked = volAuto === '1';
+  if (savedName) document.getElementById('settingsName').value = savedName;
+  if (savedInvestor) document.getElementById('settingsInvestor').value = savedInvestor;
+  if (notifications.length) document.getElementById('notifDot').style.display = 'block';
+});
+
+// Load user from session
+fetch('/api/auth/me')
+  .then(r => r.json())
+  .then(d => {
+    if (d.success && d.name) {
+      document.getElementById('sidebarUserName').textContent = d.name;
+    }
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>
